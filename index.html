@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="mk">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Мој Буџет · Reel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!--
+      Мој Буџет promo Reel, 1080×1920, about 22 seconds.
+      Click or press Space to play (from the start), F for full screen.
+      ?lang=en       English version
+      ?autoplay=1    start at once
+      ?t=8000        freeze on that moment (ms), for checking a frame
+      window.renderAt(ms) draws any moment, for frame-by-frame export.
+    -->
+    <style>
+        html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+        body { display: flex; align-items: center; justify-content: center; cursor: pointer;
+            font-family: Inter, -apple-system, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased; color: #f5f5f7; }
+        #stage { position: relative; width: 1080px; height: 1920px; flex: none; overflow: hidden; background: #000; transform-origin: center; }
+        .layer { position: absolute; inset: 0; opacity: 0; }
+        .abs { position: absolute; }
+        .center-x { left: 0; right: 0; text-align: center; }
+        .hint { position: absolute; left: 0; right: 0; bottom: 80px; text-align: center; color: #6e6e73; font-size: 30px; letter-spacing: 0.02em; }
+
+        /* Intro */
+        .glow { position: absolute; width: 1500px; height: 1500px; border-radius: 50%; left: -210px; top: 210px; filter: blur(40px); }
+        .logo { position: absolute; left: 50%; top: 610px; width: 300px; height: 362px; margin-left: -150px; }
+        .logo svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+        .brand { font-weight: 700; font-size: 150px; letter-spacing: -0.02em; line-height: 1; }
+        .tagline { font-weight: 500; font-size: 56px; color: #a1a1a6; letter-spacing: -0.01em; }
+
+        /* Feature captions */
+        .caption { position: absolute; left: 0; right: 0; top: 150px; text-align: center; }
+        .headline { font-weight: 700; font-size: 88px; letter-spacing: -0.03em; line-height: 1.05; padding: 0 60px; }
+        .sub { font-weight: 500; font-size: 40px; color: #a1a1a6; padding: 0 110px; line-height: 1.3; margin-top: 18px; }
+
+        /* Phone */
+        .phone { position: absolute; left: 50%; top: 520px; width: 600px; height: 1240px; margin-left: -300px; border-radius: 96px;
+            background: #1d1d1f; padding: 18px; box-sizing: border-box;
+            box-shadow: 0 0 0 3px #3a3a3c, 0 60px 160px rgba(0,0,0,0.8), 0 0 140px rgba(0,122,255,0.10); }
+        .screen { position: relative; width: 100%; height: 100%; border-radius: 80px; overflow: hidden; background: #f2f2f7; color: #1c1c1e; }
+        .island { position: absolute; top: 22px; left: 50%; width: 170px; height: 50px; margin-left: -85px; border-radius: 25px; background: #000; z-index: 5; }
+        .status { position: absolute; top: 30px; left: 62px; right: 56px; display: flex; justify-content: space-between; font-weight: 600; font-size: 30px; }
+        .status .icons { display: flex; gap: 10px; align-items: center; }
+        .bar { width: 34px; height: 18px; border: 3px solid currentColor; border-radius: 6px; position: relative; opacity: .9; }
+        .bar::after { content: ""; position: absolute; inset: 2px 8px 2px 2px; background: currentColor; border-radius: 2px; }
+        .sheen { position: absolute; inset: 0; pointer-events: none; z-index: 6;
+            background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.22) 50%, transparent 65%); }
+        .content { position: absolute; top: 110px; left: 30px; right: 30px; }
+        .large { font-weight: 800; font-size: 66px; letter-spacing: -0.02em; margin: 8px 6px 22px; }
+        .seg { display: flex; background: #e3e3e8; border-radius: 18px; padding: 5px; margin-bottom: 30px; }
+        .seg div { flex: 1; text-align: center; font-weight: 600; font-size: 28px; padding: 12px 0; border-radius: 14px; color: #3a3a3c; }
+        .seg .on { background: #fff; color: #1c1c1e; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .card { background: #fff; border-radius: 30px; overflow: hidden; margin-bottom: 26px; }
+        .row { display: flex; align-items: center; gap: 16px; padding: 0 28px; min-height: 96px; font-size: 32px; }
+        .sep { height: 1px; background: #e5e5ea; margin-left: 28px; }
+        .label { font-size: 24px; color: #6c6c70; font-weight: 500; letter-spacing: 0.04em; margin: 0 10px 12px; }
+        .caret { display: inline-block; width: 3px; height: 40px; background: #007aff; vertical-align: -8px; margin-left: 2px; }
+        .amount { font-weight: 700; font-size: 52px; letter-spacing: -0.01em; }
+        .muted { color: #8e8e93; }
+        .switch { width: 82px; height: 50px; border-radius: 25px; background: #34c759; position: relative; margin-left: auto; }
+        .switch::after { content: ""; position: absolute; right: 4px; top: 4px; width: 42px; height: 42px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.2); }
+        .chips { display: flex; flex-wrap: wrap; gap: 14px; padding: 24px 28px; }
+        .chip { padding: 13px 22px; border-radius: 999px; background: #eeeef0; font-size: 26px; font-weight: 500; color: #1c1c1e; }
+        .legend { display: flex; align-items: center; gap: 16px; font-size: 30px; padding: 0 28px; min-height: 84px; }
+        .dot { width: 22px; height: 22px; border-radius: 50%; }
+        .legend .pct { margin-left: auto; color: #6c6c70; font-variant-numeric: tabular-nums; }
+
+        /* Lock screen */
+        .lock { background: radial-gradient(circle at 18% 22%, #2f6bff 0, transparent 46%), radial-gradient(circle at 82% 68%, #21c46b 0, transparent 44%), radial-gradient(circle at 50% 110%, #5b3df5 0, transparent 50%), #0a0f1f; color: #fff; }
+        .lock .date { position: absolute; top: 150px; left: 0; right: 0; text-align: center; font-size: 34px; font-weight: 500; opacity: .9; }
+        .lock .time { position: absolute; top: 190px; left: 0; right: 0; text-align: center; font-size: 190px; font-weight: 300; letter-spacing: -0.03em; }
+        .notif { position: absolute; left: 24px; right: 24px; border-radius: 42px; padding: 26px 28px; display: flex; gap: 22px;
+            background: rgba(245,245,247,0.78); color: #1c1c1e; backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25); }
+        .appicon { width: 76px; height: 76px; border-radius: 18px; background: #fff; flex: none; position: relative; box-shadow: inset 0 0 0 1px rgba(0,0,0,.06); }
+        .appicon svg { position: absolute; left: 14px; top: 9px; width: 48px; height: 58px; }
+        .notif .head { display: flex; justify-content: space-between; font-size: 24px; color: #6c6c70; font-weight: 600; letter-spacing: 0.02em; }
+        .notif .title { font-size: 31px; font-weight: 700; margin-top: 4px; }
+        .notif .body { font-size: 29px; line-height: 1.3; margin-top: 2px; }
+
+        /* Privacy */
+        .locktile { position: absolute; left: 50%; top: 520px; width: 260px; height: 260px; margin-left: -130px; border-radius: 64px;
+            background: rgba(52,199,89,0.16); display: flex; align-items: center; justify-content: center; color: #34c759; }
+        .promise { font-weight: 700; font-size: 96px; letter-spacing: -0.03em; line-height: 1.1; }
+        .grad { background: linear-gradient(90deg, #34c759, #0a84ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    </style>
+</head>
+<body>
+<div id="stage">
+
+    <!-- 1 · Intro: light, the logo, the name -->
+    <div class="layer" id="intro">
+        <div class="glow" id="glowA" style="background: radial-gradient(circle, rgba(52,199,89,0.55) 0, rgba(52,199,89,0) 60%);"></div>
+        <div class="glow" id="glowB" style="background: radial-gradient(circle, rgba(10,132,255,0.55) 0, rgba(10,132,255,0) 60%);"></div>
+        <div class="logo" id="logo">
+            <svg viewBox="0 0 694.81 837.83" id="bill1"><polygon fill="#f5f5f7" points="219.11 332.38 200.02 332.38 424.46 0 648.4 154.87 525.61 332.19 506.13 332.38 620.59 159.94 429.53 27.82 219.11 332.38"/> <path fill="#f5f5f7" d="M463.98,318.68c0,4.62-.38,9.18-1.11,13.6h-163.42c-.73-4.42-1.11-8.98-1.11-13.6,0-45.74,37.08-82.82,82.82-82.82s82.82,37.08,82.82,82.82Z"/></svg>
+            <svg viewBox="0 0 694.81 837.83" id="bill2"><polygon fill="#a1a1a6" points="327.31 75.34 323.52 92.51 277.74 83.62 217.41 71.92 205.75 131.95 163.24 332.38 146.42 332.38 203.49 51.31 327.31 75.34"/> <path fill="#a1a1a6" d="M280.21,75.14c-4.91,21.81-19.76,41.09-41.81,50.76-13.52,5.93-27.87,7.42-41.4,5.12l13.47-69.4,69.75,13.53Z"/></svg>
+            <svg viewBox="0 0 694.81 837.83" id="wallet"><path fill="#f5f5f7" d="M61.82,837.83c-12.05,0-27.38-2.61-39.38-13.34-15.55-13.91-21.06-37.15-16.39-69.07L1.23,331.03c-1.58-7.63-1.64-16.22-.15-25.71,2.31-14.8,9.51-26.6,21.39-35.06,30.44-21.68,81.69-12.77,83.85-12.38l-3.54,19.68,1.77-9.84-1.76,9.84c-.45-.08-45.21-7.8-68.75,9-7.21,5.14-11.49,12.04-13.07,21.06l.24,21.08c1.06,3.93,2.8,7.3,5.23,10.14,12.54,14.65,43.38,15.87,71.31,15.87,45.44,0,468.83,1.68,473.1,1.7,26.96,0,78.02,13.83,78.02,66.15l5.1,331.29c.42,4.92,2.69,41.51-20.89,64.66-15.06,14.79-36.78,20.62-64.57,17.34H80.2c-2.88,.65-9.8,1.97-18.38,1.97ZM21.56,360.86l4.5,395.92-.12,.8c-3.8,25.2-.52,42.68,9.77,51.94,14.7,13.24,40.5,6.73,40.75,6.66l1.24-.32h1.31s490.69,0,490.69,0l.61,.07c21.7,2.66,38.07-1.25,48.68-11.61,17.91-17.5,15.07-48.61,15.03-48.92l-.05-.86-5.1-331.82c0-45.54-55.72-46.3-58.09-46.31-4.29-.02-427.64-1.7-473.04-1.7-28.22,0-56.93-1.23-76.17-13.85Z"/> <path fill="#f5f5f7" d="M649.07,684.41h-103.8c-51.49,0-93.38-41.89-93.38-93.38s41.89-93.38,93.38-93.38h103.8c25.22,0,45.73,20.52,45.73,45.73v95.29c0,25.22-20.52,45.73-45.73,45.73Zm-103.8-166.76c-40.46,0-73.38,32.92-73.38,73.38s32.92,73.38,73.38,73.38h103.8c14.19,0,25.74-11.55,25.74-25.74v-95.29c0-14.19-11.55-25.74-25.74-25.74h-103.8Z"/> <circle fill="#f5f5f7" cx="545.27" cy="596.14" r="28.93"/></svg>
+        </div>
+        <div class="abs center-x brand" id="brand" style="top: 1130px;" data-t="name"></div>
+        <div class="abs center-x tagline" id="tagline" style="top: 1310px;" data-t="tagline"></div>
+    </div>
+
+    <!-- 2 · Add in seconds -->
+    <div class="layer" id="f1">
+        <div class="caption"><div class="headline" data-t="f1h"></div><div class="sub" data-t="f1s"></div></div>
+        <div class="phone"><div class="screen">
+            <div class="island"></div>
+            <div class="status"><span>9:41</span><span class="icons"><span class="bar"></span></span></div>
+            <div class="content">
+                <div class="large" data-t="addTitle"></div>
+                <div class="seg"><div class="on" data-t="expense"></div><div data-t="income"></div></div>
+                <div class="card">
+                    <div class="row"><span id="typed"></span><span class="caret" id="caret"></span></div>
+                    <div class="sep"></div>
+                    <div class="row"><span class="amount" id="amount"></span></div>
+                    <div class="sep"></div>
+                    <div class="row"><span data-t="date"></span><span class="muted" style="margin-left:auto" data-t="dateValue"></span></div>
+                </div>
+                <div class="label" data-t="categorization"></div>
+                <div class="card">
+                    <div class="row">
+                        <svg width="34" height="34" viewBox="0 0 24 24"><path fill="#007aff" d="M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z"/></svg>
+                        <span data-t="auto" style="white-space: nowrap; font-size: 29px;"></span><span class="switch"></span>
+                    </div>
+                    <div class="sep"></div>
+                    <div class="chips">
+                        <span class="chip" id="chipNeeds" data-t="needs"></span>
+                        <span class="chip" data-t="wants"></span>
+                        <span class="chip" data-t="investments"></span>
+                    </div>
+                    <div class="sep"></div>
+                    <div class="chips"><span class="chip" id="chipFood" data-t="food"></span></div>
+                </div>
+            </div>
+            <div class="sheen" id="sheen1"></div>
+        </div></div>
+    </div>
+
+    <!-- 3 · See where it goes -->
+    <div class="layer" id="f2">
+        <div class="caption"><div class="headline" data-t="f2h"></div><div class="sub" data-t="f2s"></div></div>
+        <div class="phone"><div class="screen">
+            <div class="island"></div>
+            <div class="status"><span>9:41</span><span class="icons"><span class="bar"></span></span></div>
+            <div class="content">
+                <div class="large" data-t="overviewTitle"></div>
+                <div class="card" style="padding: 40px 0 30px;">
+                    <div style="position: relative; width: 400px; height: 400px; margin: 0 auto;">
+                        <svg width="400" height="400" viewBox="0 0 400 400" style="transform: rotate(-90deg)">
+                            <circle cx="200" cy="200" r="160" fill="none" stroke="#eeeef0" stroke-width="48"/>
+                            <circle id="arc0" cx="200" cy="200" r="160" fill="none" stroke="#34c759" stroke-width="48"/>
+                            <circle id="arc1" cx="200" cy="200" r="160" fill="none" stroke="#ff9500" stroke-width="48"/>
+                            <circle id="arc2" cx="200" cy="200" r="160" fill="none" stroke="#007aff" stroke-width="48"/>
+                        </svg>
+                        <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                            <div class="muted" style="font-size: 28px; font-weight: 500;" data-t="spent"></div>
+                            <div id="spent" style="font-size: 50px; font-weight: 700; font-variant-numeric: tabular-nums;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="legend"><span class="dot" style="background:#34c759"></span><span data-t="needs"></span><span class="pct">58%</span></div>
+                    <div class="sep"></div>
+                    <div class="legend"><span class="dot" style="background:#ff9500"></span><span data-t="wants"></span><span class="pct">27%</span></div>
+                    <div class="sep"></div>
+                    <div class="legend"><span class="dot" style="background:#007aff"></span><span data-t="investments"></span><span class="pct">15%</span></div>
+                </div>
+            </div>
+            <div class="sheen" id="sheen2"></div>
+        </div></div>
+    </div>
+
+    <!-- 4 · Reminded on the day -->
+    <div class="layer" id="f3">
+        <div class="caption"><div class="headline" data-t="f3h"></div><div class="sub" data-t="f3s"></div></div>
+        <div class="phone"><div class="screen lock">
+            <div class="island"></div>
+            <div class="date" data-t="lockDate"></div>
+            <div class="time">9:00</div>
+            <div class="notif" id="n2" style="top: 600px;">
+                <div class="appicon"><svg viewBox="0 0 694.81 837.83" data-mark="ink"></svg></div>
+                <div style="flex: 1;">
+                    <div class="head"><span data-t="appCaps"></span><span data-t="now"></span></div>
+                    <div class="title" data-t="salary"></div>
+                    <div class="body" data-t="salaryBody"></div>
+                </div>
+            </div>
+            <div class="notif" id="n1" style="top: 600px;">
+                <div class="appicon"><svg viewBox="0 0 694.81 837.83" data-mark="ink"></svg></div>
+                <div style="flex: 1;">
+                    <div class="head"><span data-t="appCaps"></span><span data-t="now"></span></div>
+                    <div class="title" data-t="rent"></div>
+                    <div class="body" data-t="rentBody"></div>
+                </div>
+            </div>
+            <div class="sheen" id="sheen3"></div>
+        </div></div>
+    </div>
+
+    <!-- 5 · Private -->
+    <div class="layer" id="priv">
+        <div class="locktile" id="lockTile">
+            <svg width="130" height="130" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="abs center-x promise" id="p0" style="top: 900px;" data-t="p0"></div>
+        <div class="abs center-x promise" id="p1" style="top: 1015px;" data-t="p1"></div>
+        <div class="abs center-x promise grad" id="p2" style="top: 1130px;" data-t="p2"></div>
+    </div>
+
+    <!-- 6 · Outro -->
+    <div class="layer" id="outro">
+        <div class="glow" style="left: -210px; top: 260px; background: radial-gradient(circle, rgba(10,132,255,0.35) 0, rgba(10,132,255,0) 60%);"></div>
+        <div class="logo" style="top: 560px;">
+            <svg viewBox="0 0 694.81 837.83" data-mark="white"></svg>
+        </div>
+        <div class="abs center-x brand" style="top: 1030px;" data-t="name"></div>
+        <div class="abs center-x tagline" id="outroSub" style="top: 1210px; font-size: 44px;" data-t="available"></div>
+    </div>
+
+    <div class="hint" id="hint"></div>
+</div>
+
+<script>
+    // ─── Copy (from the app's own strings where it shows the app) ────────────────
+    const COPY = {
+        mk: {
+            name: "Мој Буџет",
+            tagline: "Секој денар. Под контрола.",
+            f1h: "Внеси за секунди.", f1s: "Напиши го продавачот. Категоријата се избира сама.",
+            f2h: "Види каде оди парата.", f2s: "Буџет по категорија, јасно на едно место.",
+            f3h: "Потсетник на денот.", f3s: "Кирија, сметки и плата. Во 9:00, кога доспеваат.",
+            p0: "Без сметка.", p1: "Без реклами.", p2: "Само на твојот телефон.",
+            available: "Достапно на App Store и Google Play",
+            hint: "Кликни или притисни Space за старт · F за цел екран",
+            addTitle: "Внеси", expense: "Трошок", income: "Приход", merchant: "Маркет", currency: "МКД",
+            date: "Датум", dateValue: "15 окт. 2026", categorization: "КАТЕГОРИЗАЦИЈА", auto: "Автоматска категорија",
+            needs: "Потреби", wants: "Желби", investments: "Инвестиции", food: "Храна и пијалоци",
+            overviewTitle: "Преглед", spent: "Потрошено",
+            lockDate: "Четврток, 15 октомври", appCaps: "МОЈ БУЏЕТ", now: "сега",
+            rent: "Кирија", rentBody: "15.000 МКД доспева денес. Отвори ја апликацијата за да го додадеш.",
+            salary: "Плата", salaryBody: "Дали пристигнаа 60.000 МКД? Отвори ја апликацијата за да ги додадеш.",
+        },
+        en: {
+            name: "Moj Budzet",
+            tagline: "Every denar. Under control.",
+            f1h: "Add it in seconds.", f1s: "Type where you paid. The category picks itself.",
+            f2h: "See where it goes.", f2s: "A budget for every category, clear in one place.",
+            f3h: "Reminded on the day.", f3s: "Rent, bills and salary. At 9:00, when they're due.",
+            p0: "No account.", p1: "No ads.", p2: "Only on your phone.",
+            available: "Available on the App Store and Google Play",
+            hint: "Click or press Space to play · F for full screen",
+            addTitle: "Add", expense: "Expense", income: "Income", merchant: "Market", currency: "MKD",
+            date: "Date", dateValue: "Oct 15, 2026", categorization: "CATEGORIZATION", auto: "Auto category",
+            needs: "Needs", wants: "Wants", investments: "Investments", food: "Food and drinks",
+            overviewTitle: "Overview", spent: "Spent",
+            lockDate: "Thursday, October 15", appCaps: "MOJ BUDZET", now: "now",
+            rent: "Rent", rentBody: "15.000 MKD is due today. Open the app to add it.",
+            salary: "Salary", salaryBody: "Did 60.000 MKD arrive? Open the app to add it.",
+        },
+    };
+
+    const params = new URLSearchParams(location.search);
+    const lang = params.get("lang") === "en" ? "en" : "mk";
+    const T = COPY[lang];
+    document.documentElement.lang = lang;
+    document.title = `${T.name} · Reel`;
+    document.querySelectorAll("[data-t]").forEach((el) => { el.textContent = T[el.dataset.t]; });
+    document.getElementById("hint").textContent = T.hint;
+
+    // The whole logo (bills and wallet) from the intro's drawing: white for the
+    // outro, ink on the white app icon of the notifications (as in the app).
+    const MARK = ["bill1", "bill2", "wallet"].map((id) => document.getElementById(id).innerHTML).join("");
+    document.querySelectorAll("[data-mark]").forEach((svg) => {
+        svg.innerHTML = svg.dataset.mark === "ink" ? MARK.replace(/#f5f5f7/g, "#111111").replace(/#a1a1a6/g, "#333333") : MARK;
+    });
+
+    // ─── Timing helpers ───────────────────────────────────────────────────────────
+    const clamp01 = (x) => Math.min(1, Math.max(0, x));
+    const ease = {
+        out: (x) => 1 - Math.pow(1 - x, 3),
+        outExpo: (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * x)),
+        inOut: (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2),
+    };
+    /** Progress of `t` between a and b (ms), eased. */
+    const seg = (t, a, b, e = ease.out) => e(clamp01((t - a) / (b - a)));
+    /** 0 → 1 → 0 across a scene window, with fades at both ends. */
+    const win = (t, a, b, fadeIn = 500, fadeOut = 500) => Math.min(seg(t, a, a + fadeIn, ease.inOut), 1 - seg(t, b - fadeOut, b, ease.inOut));
+    const $ = (id) => document.getElementById(id);
+    const style = (el, s) => Object.assign(el.style, s);
+    const dots = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+    // Scene windows, in ms.
+    const S = { intro: [0, 6200], f1: [6000, 9500], f2: [9300, 12600], f3: [12400, 15700], priv: [15500, 18700], outro: [18500, 22400] };
+    const END = 22600;
+
+    /** A phone rising out of the dark and straightening up, then lifting away. */
+    function phone(layer, t, [a, b]) {
+        const p = seg(t, a + 100, a + 1100, ease.outExpo);
+        const q = seg(t, b - 550, b, ease.inOut);
+        const ph = layer.querySelector(".phone");
+        style(ph, {
+            transform: `perspective(2600px) translateY(${(1 - p) * 300 - q * 80}px) rotateX(${(1 - p) * 22}deg) scale(${0.9 + 0.1 * p - q * 0.03})`,
+        });
+        const caps = layer.querySelectorAll(".headline, .sub");
+        caps.forEach((el, i) => {
+            const c = seg(t, a + 250 + i * 160, a + 1050 + i * 160, ease.out);
+            style(el, { opacity: c * (1 - q), transform: `translateY(${(1 - c) * 40 - q * 30}px)`, filter: `blur(${(1 - c) * 12}px)` });
+        });
+        // A soft light passing over the glass once it has settled.
+        const s = seg(t, a + 900, a + 2100, ease.inOut);
+        style(layer.querySelector(".sheen"), { transform: `translateX(${-120 + s * 240}%)`, opacity: s > 0 && s < 1 ? 1 : 0 });
+    }
+
+    // ─── One frame ────────────────────────────────────────────────────────────────
+    function render(t) {
+        // 1 · Intro
+        {
+            const L = $("intro");
+            const [a, b] = S.intro;
+            style(L, { opacity: win(t, a, b, 1, 600), transform: `scale(${1 - seg(t, b - 600, b, ease.inOut) * 0.04})` });
+            const g = seg(t, 0, 2600, ease.out);
+            style($("glowA"), { opacity: 0.85 * g, transform: `translate(${-260 + g * 200}px, ${-80 + g * 60}px)` });
+            style($("glowB"), { opacity: 0.75 * g, transform: `translate(${300 - g * 160}px, ${160 - g * 40}px)` });
+            // The wallet is uncovered by a sweep of light, then the bills slide in.
+            const w = seg(t, 300, 1700, ease.inOut);
+            style($("wallet"), { clipPath: `inset(0 ${100 - w * 100}% 0 0)`, filter: `blur(${(1 - w) * 10}px)` });
+            const b1 = seg(t, 1250, 2050, ease.outExpo), b2 = seg(t, 1450, 2250, ease.outExpo);
+            style($("bill1"), { opacity: b1, transform: `translateY(${(1 - b1) * -70}px) rotate(${(1 - b1) * -8}deg)` });
+            style($("bill2"), { opacity: b2, transform: `translateY(${(1 - b2) * -70}px) rotate(${(1 - b2) * 8}deg)` });
+            // Then the logo makes room for the name.
+            const up = seg(t, 2300, 3300, ease.inOut);
+            style($("logo"), { transform: `translateY(${-up * 170}px) scale(${1.12 - up * 0.32})` });
+            const n = seg(t, 2700, 3700, ease.out);
+            style($("brand"), { opacity: n, letterSpacing: `${0.06 - n * 0.08}em`, filter: `blur(${(1 - n) * 14}px)`, transform: `translateY(${(1 - n) * 30}px)` });
+            const tg = seg(t, 3300, 4300, ease.out);
+            style($("tagline"), { opacity: tg, transform: `translateY(${(1 - tg) * 30}px)`, filter: `blur(${(1 - tg) * 10}px)` });
+        }
+
+        // 2 · Add in seconds: typing, the amount, then the category lights up
+        {
+            const L = $("f1");
+            style(L, { opacity: win(t, ...S.f1, 300, 500) });
+            phone(L, t, S.f1);
+            const word = T.merchant;
+            const typed = Math.max(0, Math.min(word.length, Math.floor((t - 7000) / 110) + 1));
+            $("typed").textContent = t < 7000 ? "" : word.slice(0, typed);
+            const done = typed >= word.length && t >= 7000;
+            $("caret").style.opacity = done ? 0 : (Math.floor(t / 450) % 2 === 0 ? 1 : 0.15);
+            const am = seg(t, 7800, 8150, ease.out);
+            $("amount").textContent = `${dots(Math.round(850 * am))} ${T.currency}`;
+            style($("amount"), { opacity: am });
+            const c = seg(t, 8300, 8650, ease.outExpo);
+            const pop = 1 + Math.sin(Math.PI * c) * 0.08;
+            style($("chipNeeds"), c > 0
+                ? { background: `rgba(52,199,89,${c})`, color: c > 0.5 ? "#fff" : "#1c1c1e", fontWeight: 600, transform: `scale(${pop})` }
+                : { background: "#eeeef0", color: "#1c1c1e", fontWeight: 500, transform: "none" });
+            const f = seg(t, 8450, 8800, ease.outExpo);
+            style($("chipFood"), f > 0
+                ? { background: `rgba(0,122,255,${f})`, color: f > 0.5 ? "#fff" : "#1c1c1e", fontWeight: 600, transform: `scale(${1 + Math.sin(Math.PI * f) * 0.08})` }
+                : { background: "#eeeef0", color: "#1c1c1e", fontWeight: 500, transform: "none" });
+        }
+
+        // 3 · See where it goes: the donut fills, the total counts up
+        {
+            const L = $("f2");
+            style(L, { opacity: win(t, ...S.f2, 300, 500) });
+            phone(L, t, S.f2);
+            const C = 2 * Math.PI * 160;
+            const shares = [0.58, 0.27, 0.15];
+            const grow = seg(t, 10000, 11300, ease.inOut);
+            let start = 0;
+            shares.forEach((share, i) => {
+                const len = share * C - 8;
+                const visible = Math.max(0, Math.min(len, grow * C - start));
+                style($(`arc${i}`), { strokeDasharray: `${visible} ${C}`, strokeDashoffset: `${-start}` });
+                start += share * C;
+            });
+            $("spent").textContent = `${dots(Math.round(31500 * grow))} ${T.currency}`;
+        }
+
+        // 4 · Reminded on the day: two notifications land on the lock screen
+        {
+            const L = $("f3");
+            style(L, { opacity: win(t, ...S.f3, 300, 500) });
+            phone(L, t, S.f3);
+            const n1 = seg(t, 13200, 13900, ease.outExpo);
+            const n2 = seg(t, 13900, 14600, ease.outExpo);
+            // The salary arrives first; the rent lands on top of it and pushes it down.
+            style($("n2"), { opacity: n1, transform: `translateY(${(1 - n1) * -260 + n2 * 268}px) scale(${0.94 + 0.06 * n1 - n2 * 0.04})` });
+            style($("n1"), { opacity: n2, transform: `translateY(${(1 - n2) * -260}px) scale(${0.94 + 0.06 * n2})` });
+        }
+
+        // 5 · Private
+        {
+            const L = $("priv");
+            const [a, b] = S.priv;
+            style(L, { opacity: win(t, a, b, 300, 500) });
+            const k = seg(t, a + 200, a + 1100, ease.outExpo);
+            style($("lockTile"), { opacity: k, transform: `scale(${0.6 + 0.4 * k})` });
+            ["p0", "p1", "p2"].forEach((id, i) => {
+                const p = seg(t, a + 700 + i * 380, a + 1500 + i * 380, ease.out);
+                style($(id), { opacity: p, transform: `translateY(${(1 - p) * 50}px)`, filter: `blur(${(1 - p) * 12}px)` });
+            });
+        }
+
+        // 6 · Outro, then black
+        {
+            const L = $("outro");
+            const [a, b] = S.outro;
+            const o = win(t, a, b, 700, 600);
+            style(L, { opacity: o, transform: `scale(${1.04 - seg(t, a, b, ease.out) * 0.04})` });
+            const s = seg(t, a + 900, a + 1700, ease.out);
+            style($("outroSub"), { opacity: s, transform: `translateY(${(1 - s) * 24}px)` });
+        }
+    }
+
+    // ─── Playback ─────────────────────────────────────────────────────────────────
+    const stage = $("stage");
+    const fit = () => stage.style.transform = `scale(${Math.min(innerWidth / 1080, innerHeight / 1920)})`;
+    addEventListener("resize", fit);
+    fit();
+
+    let startedAt = null;
+    const frozen = params.has("t") ? Number(params.get("t")) : null;
+    const play = () => { startedAt = performance.now(); $("hint").style.opacity = 0; };
+    addEventListener("click", play);
+    addEventListener("keydown", (e) => {
+        if (e.code === "Space") { e.preventDefault(); play(); }
+        if (e.key === "f" || e.key === "F") document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+    });
+    if (params.get("autoplay") === "1") play();
+    if (frozen !== null) $("hint").style.opacity = 0;
+
+    /** Draws any moment; used by the frame-by-frame export. */
+    window.renderAt = (ms) => { $("hint").style.opacity = 0; render(ms); };
+    window.REEL_LENGTH = END;
+
+    (function frame() {
+        const t = frozen !== null ? frozen : startedAt === null ? 0 : Math.min(END, performance.now() - startedAt);
+        render(t);
+        requestAnimationFrame(frame);
+    })();
+</script>
+</body>
+</html>
